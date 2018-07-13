@@ -19,7 +19,7 @@ type TestIngressServer struct {
 	grpcServer *grpc.Server
 }
 
-func NewTestIngressServer(serverCert, serverKey, caCert string) (*TestIngressServer, error) {
+func NewTestIngressServer(addr, serverCert, serverKey, caCert string) (*TestIngressServer, error) {
 	cert, err := tls.LoadX509KeyPair(serverCert, serverKey)
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func NewTestIngressServer(serverCert, serverKey, caCert string) (*TestIngressSer
 	return &TestIngressServer{
 		tlsConfig: tlsConfig,
 		receivers: make(chan loggregator_v2.Ingress_BatchSenderServer),
-		addr:      "localhost:0",
+		addr:      addr,
 	}, nil
 }
 
@@ -63,7 +63,7 @@ func (t *TestIngressServer) Receivers() chan loggregator_v2.Ingress_BatchSenderS
 }
 
 func (t *TestIngressServer) Start() error {
-	listener, err := net.Listen("tcp4", t.addr)
+	listener, err := net.Listen("tcp", t.addr)
 	if err != nil {
 		return err
 	}

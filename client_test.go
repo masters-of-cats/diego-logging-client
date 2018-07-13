@@ -28,14 +28,19 @@ var _ = Describe("DiegoLoggingClient", func() {
 
 	Context("when the v2 api is used", func() {
 		var (
-			testIngressServer *testhelpers.TestIngressServer
-			metricsPort       int
+			testIngressServer     *testhelpers.TestIngressServer
+			testIngressServerAddr string
+			metricsPort           int
 		)
 
 		BeforeEach(func() {
+			testIngressServerAddr = "127.0.0.1:0"
+		})
+
+		JustBeforeEach(func() {
 			var err error
 
-			testIngressServer, err = testhelpers.NewTestIngressServer(metronServerCertFile, metronServerKeyFile, metronCAFile)
+			testIngressServer, err = testhelpers.NewTestIngressServer(testIngressServerAddr, metronServerCertFile, metronServerKeyFile, metronCAFile)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(testIngressServer.Start()).To(Succeed())
@@ -44,8 +49,29 @@ var _ = Describe("DiegoLoggingClient", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		Context("and the loggregator agent isn't up", func() {
+		Context("and the loggregator agent isn't listening on ipv4", func() {
 			BeforeEach(func() {
+				testIngressServerAddr = "[::1]:0"
+			})
+
+			It("returns an error when constructing the loggregator client", func() {
+				_, err := client.NewIngressClient(client.Config{
+					SourceID:           "some-source-id",
+					InstanceID:         "some-instance-id",
+					BatchFlushInterval: 10 * time.Millisecond,
+					BatchMaxSize:       1,
+					UseV2API:           true,
+					APIPort:            metricsPort,
+					CACertPath:         metronCAFile,
+					KeyPath:            metronClientKeyFile,
+					CertPath:           metronClientCertFile,
+				})
+				Expect(err).To(HaveOccurred())
+			})
+		})
+
+		Context("and the loggregator agent isn't up", func() {
+			JustBeforeEach(func() {
 				testIngressServer.Stop()
 			})
 
@@ -68,7 +94,7 @@ var _ = Describe("DiegoLoggingClient", func() {
 		})
 
 		Context("and the loggregator agent is up", func() {
-			BeforeEach(func() {
+			JustBeforeEach(func() {
 				var err error
 				c, err = client.NewIngressClient(client.Config{
 					SourceID:           "some-source-id",
