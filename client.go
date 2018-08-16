@@ -197,6 +197,7 @@ func (c client) SendAppMetrics(m *events.ContainerMetric) error {
 		loggregator.WithGaugeValue("disk", float64(m.GetDiskBytes()), "bytes"),
 		loggregator.WithGaugeValue("memory_quota", float64(m.GetMemoryBytesQuota()), "bytes"),
 		loggregator.WithGaugeValue("disk_quota", float64(m.GetDiskBytesQuota()), "bytes"),
+		loggregator.WithGaugeValue("cpu_weighted", float64(m.GetCpuPercentageWeighted()), "bytes"),
 	)
 
 	return nil
