@@ -135,6 +135,17 @@ type FakeIngressClient struct {
 	sendAppMetricsReturnsOnCall map[int]struct {
 		result1 error
 	}
+	SendAppCPUUsageStub        func(cpuUsage *events.ContainerCPUUsage) error
+	sendAppCPUUsageMutex       sync.RWMutex
+	sendAppCPUUsageArgsForCall []struct {
+		cpuUsage *events.ContainerCPUUsage
+	}
+	sendAppCPUUsageReturns struct {
+		result1 error
+	}
+	sendAppCPUUsageReturnsOnCall map[int]struct {
+		result1 error
+	}
 	SendComponentMetricStub        func(name string, value float64, unit string) error
 	sendComponentMetricMutex       sync.RWMutex
 	sendComponentMetricArgsForCall []struct {
@@ -646,6 +657,54 @@ func (fake *FakeIngressClient) SendAppMetricsReturnsOnCall(i int, result1 error)
 	}{result1}
 }
 
+func (fake *FakeIngressClient) SendAppCPUUsage(cpuUsage *events.ContainerCPUUsage) error {
+	fake.sendAppCPUUsageMutex.Lock()
+	ret, specificReturn := fake.sendAppCPUUsageReturnsOnCall[len(fake.sendAppCPUUsageArgsForCall)]
+	fake.sendAppCPUUsageArgsForCall = append(fake.sendAppCPUUsageArgsForCall, struct {
+		cpuUsage *events.ContainerCPUUsage
+	}{cpuUsage})
+	fake.recordInvocation("SendAppCPUUsage", []interface{}{cpuUsage})
+	fake.sendAppCPUUsageMutex.Unlock()
+	if fake.SendAppCPUUsageStub != nil {
+		return fake.SendAppCPUUsageStub(cpuUsage)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.sendAppCPUUsageReturns.result1
+}
+
+func (fake *FakeIngressClient) SendAppCPUUsageCallCount() int {
+	fake.sendAppCPUUsageMutex.RLock()
+	defer fake.sendAppCPUUsageMutex.RUnlock()
+	return len(fake.sendAppCPUUsageArgsForCall)
+}
+
+func (fake *FakeIngressClient) SendAppCPUUsageArgsForCall(i int) *events.ContainerCPUUsage {
+	fake.sendAppCPUUsageMutex.RLock()
+	defer fake.sendAppCPUUsageMutex.RUnlock()
+	return fake.sendAppCPUUsageArgsForCall[i].cpuUsage
+}
+
+func (fake *FakeIngressClient) SendAppCPUUsageReturns(result1 error) {
+	fake.SendAppCPUUsageStub = nil
+	fake.sendAppCPUUsageReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeIngressClient) SendAppCPUUsageReturnsOnCall(i int, result1 error) {
+	fake.SendAppCPUUsageStub = nil
+	if fake.sendAppCPUUsageReturnsOnCall == nil {
+		fake.sendAppCPUUsageReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.sendAppCPUUsageReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeIngressClient) SendComponentMetric(name string, value float64, unit string) error {
 	fake.sendComponentMetricMutex.Lock()
 	ret, specificReturn := fake.sendComponentMetricReturnsOnCall[len(fake.sendComponentMetricArgsForCall)]
@@ -719,6 +778,8 @@ func (fake *FakeIngressClient) Invocations() map[string][][]interface{} {
 	defer fake.sendAppErrorLogMutex.RUnlock()
 	fake.sendAppMetricsMutex.RLock()
 	defer fake.sendAppMetricsMutex.RUnlock()
+	fake.sendAppCPUUsageMutex.RLock()
+	defer fake.sendAppCPUUsageMutex.RUnlock()
 	fake.sendComponentMetricMutex.RLock()
 	defer fake.sendComponentMetricMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}

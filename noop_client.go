@@ -39,6 +39,9 @@ func (*noopIngressClient) SendAppErrorLog(appID, message, sourceType, sourceInst
 func (*noopIngressClient) SendAppMetrics(metrics *events.ContainerMetric) error {
 	return nil
 }
+func (*noopIngressClient) SendAppCPUUsage(m *events.ContainerCPUUsage) error {
+	return nil
+}
 func (*noopIngressClient) SendComponentMetric(name string, value float64, unit string) error {
 	return nil
 }

@@ -42,6 +42,7 @@ type IngressClient interface {
 	SendAppLog(appID, message, sourceType, sourceInstance string) error
 	SendAppErrorLog(appID, message, sourceType, sourceInstance string) error
 	SendAppMetrics(metrics *events.ContainerMetric) error
+	SendAppCPUUsage(cpuUsage *events.ContainerCPUUsage) error
 	SendComponentMetric(name string, value float64, unit string) error
 }
 
@@ -197,6 +198,17 @@ func (c client) SendAppMetrics(m *events.ContainerMetric) error {
 		loggregator.WithGaugeValue("disk", float64(m.GetDiskBytes()), "bytes"),
 		loggregator.WithGaugeValue("memory_quota", float64(m.GetMemoryBytesQuota()), "bytes"),
 		loggregator.WithGaugeValue("disk_quota", float64(m.GetDiskBytesQuota()), "bytes"),
+	)
+
+	return nil
+}
+
+func (c client) SendAppCPUUsage(m *events.ContainerCPUUsage) error {
+	c.client.EmitGauge(
+		loggregator.WithGaugeAppInfo(m.GetApplicationId(), int(m.GetInstanceIndex())),
+		loggregator.WithGaugeValue("absolute_usage", float64(m.GetAbsoluteUsage()), "nanoseconds"),
+		loggregator.WithGaugeValue("absolute_entitlement", float64(m.GetAbsoluteEntitlement()), "nanoseconds"),
+		loggregator.WithGaugeValue("container_age", float64(m.GetContainerAge()), "nanoseconds"),
 	)
 
 	return nil
