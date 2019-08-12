@@ -40,16 +40,9 @@ type ContainerMetric struct {
 	AbsoluteCPUEntitlement uint64
 	ContainerAge           uint64
 	Tags                   map[string]string
-	CPUSpikeState          CPUSpikeState
+	SpikeStarted           time.Time
+	SpikeEnded             time.Time
 }
-
-type CPUSpikeState int
-
-const (
-	CPUSpikeStateNoChange CPUSpikeState = iota
-	CPUSpikeStateStartSpiking
-	CPUSpikeStateEndSpiking
-)
 
 // IngressClient is the shared contract between v1 and v2 clients.
 //go:generate counterfeiter -o testhelpers/fake_ingress_client.go . IngressClient
@@ -237,10 +230,11 @@ func (c client) SendAppMetrics(m ContainerMetric) error {
 		loggregator.WithEnvelopeTags(m.Tags),
 	)
 
-	if m.CPUSpikeState != CPUSpikeStateNoChange {
+	if !m.SpikeStarted.IsZero() && !m.SpikeEnded.IsZero() {
 		c.client.EmitGauge(
 			loggregator.WithGaugeSourceInfo(m.Tags["source_id"], m.Tags["instance_id"]),
-			loggregator.WithGaugeValue("spike_change", float64(m.CPUSpikeState), "transition"),
+			loggregator.WithGaugeValue("spike_started", float64(m.SpikeStarted.Unix()), "seconds"),
+			loggregator.WithGaugeValue("spike_ended", float64(m.SpikeEnded.Unix()), "seconds"),
 			loggregator.WithEnvelopeTags(m.Tags),
 		)
 	}
